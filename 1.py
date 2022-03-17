@@ -93,20 +93,16 @@ def protein1_protein2_connectivity(conn_dict,unid_gene_dict,query1_unids, query2
     for query in query1_unids:
         p2=conn_dict[query]
         common=set(p2).intersection(query2_unids)
+        #print (common)
         #print (p2)
-        pp_dict_unid.setdefault(query,p2)
+        pp_dict_unid.setdefault(query,common)
         gene_query=unid_gene_dict[query]
-        gene_conns=[unid_gene_dict[conn] for conn in conn_dict[query]]
+        gene_conns=[unid_gene_dict[conn] for conn in common]
         pp_dict_gene.setdefault(gene_query,gene_conns)
-        n=query2_unids.count(p2)
-        #print (n)
-        if n>0:
-            print ("yes")
-            pp_dict_unid.setdefault(query,p2)
-            gene_query=unid_gene_dict[query]
-            gene_conns=[unid_gene_dict[conn] for conn in conn_dict[query]]
-            pp_dict_gene.setdefault(gene_query, gene_conns)
+       
     return pp_dict_unid, pp_dict_gene
+
+
 def get_network(conn_dict,fname,tag):
     fout1=open(fname+"_"+tag+"_vdegrees.out.txt","w")
     fout2=open(fname+"_"+tag+"_cliques_size.out.txt","w")
@@ -129,6 +125,10 @@ def get_network(conn_dict,fname,tag):
     G.add_nodes_from(nodes_list)
     G.add_edges_from(edges_list)
     
+    #nx.draw(G)
+    #plt.draw()
+    #plt.show()
+    
     # export vertex degrees
     for node in G.nodes():
         fout1.write("%s\t%s\n"%(node,G.degree[node]))
@@ -138,18 +138,16 @@ def get_network(conn_dict,fname,tag):
     
     # get connected subgraphs    
     sub_graphs = (G.subgraph(c) for c in nx.connected_components(G))
-    nx.draw(G, with_labels=True)
-    plt.draw()
-    plt.show()
+    
     
     for i, sg in enumerate(sub_graphs):
         print("subgraph {} has {} nodes".format(i, sg.number_of_nodes()))
         #
         #sg,pos=nx.spring_layout(sg)
-        print (nx.spring_layout(sg))
+        #print (nx.spring_layout(sg))
         
         pos=nx.spring_layout(sg) # positions for all nodes
-        print (pos)
+        #print (pos)
         node_list=[node for node in sg.nodes()]
         node_labels={node:node for node in sg.nodes()}
         
@@ -174,9 +172,9 @@ def get_network(conn_dict,fname,tag):
         nx.draw(G)
         nx.draw(G,pos=nx.spring_layout(G)) # use spring layout
         
-        for node in sg.nodes:
-            print(node)
-        print("\n\n")
+        #for node in sg.nodes:
+            #print(node)
+        #print("\n\n")
         #print("\tEdges:", sg.edges())
     #print(i)
     
@@ -205,6 +203,6 @@ if __name__=="__main__":
     #print(cdict)
     pp_dict_un,pp_dict=protein1_protein2_connectivity(totcdict_un, unid_gene_map,query_list1,query_list2)
     #print (pp_dict)
-    get_network(pp_dict,outfile,"set_w")
+    get_network(pp_dict,outfile,"test")
 
 
