@@ -138,10 +138,12 @@ def get_network(conn_dict,fname,tag):
     
     # get connected subgraphs    
     sub_graphs = (G.subgraph(c) for c in nx.connected_components(G))
-    print (sub_graphs)
+    nx.draw(G, with_labels=True)
+    plt.draw()
+    plt.show()
     
     for i, sg in enumerate(sub_graphs):
-        #print("subgraph {} has {} nodes".format(i, sg.number_of_nodes()))
+        print("subgraph {} has {} nodes".format(i, sg.number_of_nodes()))
         #
         #sg,pos=nx.spring_layout(sg)
         print (nx.spring_layout(sg))
