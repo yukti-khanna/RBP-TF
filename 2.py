@@ -132,25 +132,87 @@ def protein1_protein2_connectivity(conn_dict,unid_gene_dict,query1_unids, query2
        
     return pp_dict_unid, pp_dict_gene
 
+def get_interactor_distribution(conn_dict):
+    uniprot_list=[]
+    how_many_are={}
+    which_are={}
+    for key in conn_dict.keys():
+        uniprot_list.append(key)       
+    for query in uniprot_list:
+        l1=len(conn_dict[query])
+        keys= ["zero", "less_than_5", "between_5_10", "between_10_20", "more_than_20"]
+        if l1==0:
+            how_many_are.setdefault(keys[0],[]).append(l1)
+            which_are.setdefault(keys[0],[]).append(query)
+        if l1<=5:
+            how_many_are.setdefault(keys[1],[]).append(l1)
+            which_are.setdefault(keys[1],[]).append(query)
+        elif (l1>5) and (l1<=10):
+            which_are.setdefault(keys[2],[]).append(query)
+            how_many_are.setdefault(keys[2],[]).append(l1)
+        elif (l1>10) and (l1<=20):
+            how_many_are.setdefault(keys[3],[]).append(l1)
+            which_are.setdefault(keys[3],[]).append(query)
+        elif (l1>20):
+            how_many_are.setdefault(keys[4],[]).append(l1)
+            which_are.setdefault(keys[4],[]).append(query)
+            
+    return how_many_are
+                
+        
+
 def get_len_array(unid_gene_dict, conn_dict):
     len_dict={}
     length=[]
     uniprot_list=[]
+    how_many_are={}
+    which_are={}
     for key in conn_dict.keys():
         uniprot_list.append(key)       
     for query in uniprot_list:
         #print (query)
         l1=len(conn_dict[query])
-        length.append(l1)
+        length.append(l1)        
         l=len(length)
         gene_query=unid_gene_dict[query]
         len_dict.setdefault(gene_query,l1)
         data=list(len_dict.items())
         len_array=np.array(data)
         len_list=np.array(length)
-    #print (len(length))
     return len_array, len_list, l
 
+
+def two_sided_z_test(r1, r2):
+    
+    ## alpha=0.01
+    ## 2 sided test
+    ## z value for alpha/2 = -2.576,2.576
+    a2=2.576 
+    mean1=np.mean(r1)
+    mean2=np.mean(r2)
+    std1=np.std(r1)
+    std2=np.std(r2)
+    #print(len1, len2, len3)
+    #print(mean1, mean2, mean3)
+    #print(std1, std2, std3)
+    m1=mean2-mean1
+    stdmean2=std2**2/len2
+    stdmean1=std1**2/len1
+    sqrt1=math.sqrt(stdmean1+stdmean2)
+    z_1_2=m1/sqrt1
+    print (z_1_2)
+    
+    ## 99% confidence interval
+    CI_pos=m1+(a2*sqrt1)
+    CI_neg=m1-(a2*sqrt1)
+      
+    print ("Confidence interval=", "[", CI_neg, ", " , CI_pos, "]")
+    if CI_pos>0>CI_neg or CI_pos<0<CI_neg:
+        print ("two ratios are from different populations with significant difference")
+    else:
+        print ("two ratios are from the same population, no significant difference")
+    
+    return()
 
 if __name__=="__main__":
     list1='RBP_list.txt'
@@ -178,11 +240,10 @@ if __name__=="__main__":
     #print (pp_dict)
     conn_array, conn_list, conn_len=get_len_array(unid_gene_map, cdict_un)
     pp_array, pp_list, len1=get_len_array(unid_gene_map, pp_dict_un)
+    pp_dist=get_interactor_distribution(pp_dict_un)
     ratio1=np.divide(pp_list,conn_list)
-
     np.histogram(ratio1, bins=1)
-    #plt.hist(ratio1, bins=200)
-   # plt.savefig("pp_his_tf.pdf", dpi=300)
+    
 
     random, random2=get_random_unids(uniprot_gene_file, len_list1)
     #print (random)
@@ -198,75 +259,32 @@ if __name__=="__main__":
     ran2_dict_un,ran2_dict=protein1_protein2_connectivity(totcdict_un, unid_gene_map,query_list1,random2)
     ran2_array, ran2_list, len3=get_len_array(unid_gene_map, ran2_dict_un)
     ratio3=np.divide(ran2_list,conn_list)
-    #plt.hist(ratio3, bins=200)
-    #plt.legend()
-    #plt.savefig("random2_his_tf.pdf", dpi=300)
+    pp2_dict_un,pp2_dict=protein1_protein2_connectivity(totcdict_un, unid_gene_map,query_list1,query_list1)
+    pp2_array, pp2_list, len4=get_len_array(unid_gene_map, pp2_dict_un)
+    pp2_dist=get_interactor_distribution(pp2_dict_un)
+    ratio4=np.divide(pp2_list,conn_list)
+    plt.hist(ratio4, bins=200)
+    plt.show()
+    plt.hist(ratio1, bins=200)
+    plt.show()
+    
     bins = np.linspace(0.01, 1, 200)
 
     plt.hist(ratio1, bins, alpha=0.5, label='TF')
-    plt.hist(ratio2, bins, alpha=0.5, label='random set 1')
-    plt.hist(ratio3, bins, alpha=0.5, label='random set 2')
+    plt.hist(ratio4, bins, alpha=0.5, label='RBP')    
+
     plt.legend(loc='upper right')
-    plt.savefig("his_rbp.svg")
+    plt.savefig("his_rbp_sub_only.svg")
   
 
-    compare=[ratio1,ratio2, ratio3]
+    compare=[ratio1, ratio4, ratio2, ratio3]
     
     
     fig1, ax1 = plt.subplots()
-    labels = ('TF', 'random set 1', 'random set 2') 
+    labels = ('TF', 'RBP', 'random set 1', 'random set 2') 
     fig1, ax1 = plt.subplots()
     ax1.boxplot(compare, showfliers=False)
     plt.xticks(np.arange(len(labels))+1,labels)
-    plt.savefig("boxplot_rbp.svg", dpi=300)
+    plt.savefig("boxplot_rbp_sub.svg", dpi=300)
     
-    
- ##z test
-    ## alpha=0.01
-    ## 2 sided test
-    ## z value for alpha/2 = -2.576,2.576
-    a2=2.576
-    
-    mean1=np.mean(ratio1)
-    mean2=np.mean(ratio2)
-    mean3=np.mean(ratio3)
-    std1=np.std(ratio1)
-    std2=np.std(ratio2)
-    std3=np.std(ratio3)
-    print(len1, len2, len3)
-    print(mean1, mean2, mean3)
-    print(std1, std2, std3)
-    
-    
-    #z_rbp_ran1=(mean2-mean1)/math.sqrt((std2^2/len2)+(std1^2/len1))
-    m1=mean2-mean1
-    stdmean2=std2**2/len2
-    stdmean1=std1**2/len1
-    sqrt1=math.sqrt(stdmean1+stdmean2)
-    z_rbp_ran1=m1/sqrt1
-    print (z_rbp_ran1)
-    
-    
-    m2=mean3-mean1
-    stdmean3=std3**2/len3
-    sqrt2=math.sqrt(stdmean1+stdmean3)
-    z_rbp_ran2=m2/sqrt1
-    print (z_rbp_ran2)
-                    
-    m3=mean3-mean2
-    sqrt3=math.sqrt(stdmean2+stdmean3)
-    z_rbp_ran3=m3/sqrt3
-    print (z_rbp_ran3)
-    
-    ## 99% confidence interval
-    CI1_pos=m1+(a2*sqrt1)
-    CI1_neg=m1-(a2*sqrt1)
-    CI2_pos=m2+(a2*sqrt2)
-    CI2_neg=m2-(a2*sqrt2)
-    CI3_pos=m3+(a2*sqrt3)
-    CI3_neg=m3-(a2*sqrt3)
-    
-    print ("[", CI1_neg, ", " , CI1_pos, "]")
-    print ("[", CI2_neg, ", " , CI2_pos, "]")
-    print ("[", CI3_neg, ", " , CI3_pos, "]")
-
+   
