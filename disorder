@@ -374,7 +374,6 @@ def ellipse(ra,rb,ang,x0,y0,Nb=100):
 if __name__=="__main__":
     list2='RBP_list.txt'
     list1='TF_list.txt'
-    list3='PTM_list.txt'
     disorder_file='proteome_disorder_coverage_30.txt'
     interactome_file=r"human_annotated_PPIs_unids_w_methods_evidence_nopred.txt"
     uniprot_gene_file=r'UNIPROTIDS_GENENAME.txt'
@@ -384,7 +383,6 @@ if __name__=="__main__":
     totcdict_un, totcdict_gene=get_total_connectivity(interactome_file,unid_gene_map)
     query_list1, len_list1=get_uni_ids(list1)
     query_list2, stupid_list2, len_list2=gene_to_unid(list2,gene_unid_map)
-    query_list3, len_list3=get_uni_ids(list3)
 
     cdict_un,cdict=get_proteins_connectivity(totcdict_un,unid_gene_map,query_list1)
     pp_dict_un,pp_dict=protein1_protein2_connectivity(totcdict_un, unid_gene_map,query_list1,query_list2)
@@ -393,20 +391,6 @@ if __name__=="__main__":
     pp_array, pp_list, len1=get_len_array(unid_gene_map, pp_dict_un)
     pp_dist=get_interactor_distribution(pp_dict_un)
     ratio1=np.divide(pp_list,conn_list)
-    random, random2=get_random_unids(uniprot_gene_file, len_list1)
-    ran_dict_un,ran_dict=protein1_protein2_connectivity(totcdict_un, unid_gene_map,query_list1,random)
-    ran_array, ran_list, len2=get_len_array(unid_gene_map, ran_dict_un)
-    ratio2=np.divide(ran_list,conn_list)
-    ran2_dict_un,ran2_dict=protein1_protein2_connectivity(totcdict_un, unid_gene_map,query_list1,random2)
-    ran2_array, ran2_list, len3=get_len_array(unid_gene_map, ran2_dict_un)
-    ratio3=np.divide(ran2_list,conn_list)
-    pp2_dict_un,pp2_dict=protein1_protein2_connectivity(totcdict_un, unid_gene_map,query_list1,query_list1)
-    pp2_array, pp2_list, len4=get_len_array(unid_gene_map, pp2_dict_un)
-    pp2_dist=get_interactor_distribution(pp2_dict_un)
-    ratio4=np.divide(pp2_list,conn_list)
-    ptm_dict_un,ptm_dict=protein1_protein2_connectivity(totcdict_un, unid_gene_map,query_list1,query_list3)
-    ptm_array, ptm_list, len5=get_len_array(unid_gene_map, ptm_dict_un)
-    ratio5=np.divide(ptm_list,conn_list)
     
     ## disorder fraction plot
     d_dict=file_to_dict(disorder_file)
